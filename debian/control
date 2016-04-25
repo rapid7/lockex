@@ -1,0 +1,13 @@
+Source: lockex
+Section: python
+Priority: extra
+Maintainer: Jimmy Tang <jimmy_tang@rapid7.com>
+Build-Depends: debhelper (>= 9), python, dh-virtualenv (>= 0.8)
+Standards-Version: 3.9.5
+
+Package: lockex
+Architecture: any
+Pre-Depends: dpkg (>= 1.16.1), python2.7 | python2.6, ${misc:Pre-Depends}
+Depends: ${python:Depends}, ${misc:Depends}
+Description: Get a lock from zookeeper and execute
+ A small python script to help distributed systems

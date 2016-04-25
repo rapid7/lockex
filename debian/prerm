@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [[ -L "/usr/bin/lockex" ]]
+then
+	unlink /usr/bin/lockex
+fi
+
+#DEBHELPER#
+exit 0
