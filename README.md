@@ -10,6 +10,13 @@ timeout or immediately. The lock id is generated automatically based on
 user supplied command. We also assume that the user command that is to
 be run, is executed in the foreground.
 
+By default if the concurrency is set it 1, lockex will try and get lock,
+if the concurrency is greater than 1 then lockex will try to acquire a
+lock via a semaphore.
+
+lockex will die if the connection to zookeeper is lost, it will continue
+to run if the connection is suspended. lockex will do it's best to
+cleanup the child process when this happens.
 
 Use cases:
 ----------
@@ -18,8 +25,8 @@ Use cases:
 producer at a time. *lockex* will let you startup many producers but
 only one will run if it has acquired a lock.
 
-* A long running cronjob and you want to guarantee that it runs on
-only on one host.
+* A long running cronjob and you want to guarantee that it runs on only
+on one host assuming the jobs all start within a small time window.
 
 
 Installation:
@@ -67,4 +74,5 @@ Requirements:
 -------------
 
 * A working installation of zookeeper and python2.7 or higher.
-* A durable instance of zookeeper (at least three nodes)
+* A durable instance of zookeeper (at least three nodes).
+* The hosts are all synchronised with ntp.

@@ -16,7 +16,7 @@ import click
 import psutil
 
 from kazoo.client import KazooClient, KazooState
-from kazoo.exceptions import LockTimeout
+from kazoo.exceptions import LockTimeout, ConnectionClosedError
 from kazoo.handlers.threading import KazooTimeoutError
 import lockex.glog as log
 
@@ -47,23 +47,28 @@ def execute(blocking, command, concurrent, lockname, locktimeout, timeout, zkhos
     conn = get_zk(zkhosts, timeout)
     log.info("Locking with zkhosts={zkhosts} lockname={lockname} resource={resource} concurrent={concurrent} blocking={blocking} command='{command}'"
              .format(zkhosts=zkhosts, lockname=lockname, resource=resource, concurrent=concurrent, blocking=blocking, command=command))
-    lock = conn.Semaphore(lockname, resource, concurrent)
+
+    if concurrent > 1:
+        lock = conn.Semaphore(lockname, resource, concurrent)
+    else:
+        lock = conn.Lock(lockname, resource)
+
     try:
-        log.info("lease_holders='{0}'".format(",".join(lock.lease_holders())))
+        if concurrent > 1:
+            log.info("lease_holders='{0}'".format(",".join(lock.lease_holders())))
         log.info("Want to execute command={command}".format(command=command))
         if lock.acquire(blocking=blocking, timeout=locktimeout):
             log.debug("Executing command={command}")
             job = subprocess.Popen(command, stdout=sys.stdout, stderr=sys.stderr, shell=True)
             add_signal_helper(job)
+            atexit.register(cleanup, job=job, lock=lock, conn=conn)  # don't forget to cleanup at exit
             while job.returncode is None:
                 job.poll()
                 sys.stdout.flush()
                 sys.stderr.flush()
                 if job.returncode is None:
                     time.sleep(3)
-            kill_job(job)
-            lock.release()
-            conn.stop()
+            cleanup(job=job, lock=lock, conn=conn)  # really kill the processes
             if job:
                 sys.exit(job.returncode)
     except KeyboardInterrupt:
@@ -84,8 +89,18 @@ def cleanup(conn, lock, job=None):
     if job:
         kill_job(job)
         job.wait()
-    lock.release()
-    conn.stop()
+
+    try:
+        lock.release()
+    except ConnectionClosedError:
+        pass
+
+    try:
+        conn.stop()
+    except:
+        ''' the connection probably has already been closed '''
+        pass
+
     os.system('stty sane')
 
 
@@ -118,7 +133,10 @@ def kill(pid):
         log.info("Killing pid={0}".format(process.pid))
         process.kill()
         time.sleep(0.1)
-        proc.terminate()
+        try:
+            proc.terminate()
+        except UnboundLocalError:
+            pass
 
 
 def get_zk(zkhosts, timeout):
@@ -141,6 +159,8 @@ def listener(state):
     '''
     if state == KazooState.LOST:
         log.error(state)
+        os.kill(os.getpid(), signal.SIGTERM)
+        sys.exit(1)
     elif state == KazooState.SUSPENDED:
         log.error(state)
     else:
