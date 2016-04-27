@@ -27,11 +27,13 @@ click.disable_unicode_literals_warning = True
 @click.option('--blocking/--no-blocking', help='Block and wait if lock is acquired by another process', default=True)
 @click.option('--concurrent', '-c', help='Number of concurrent locks (leases) available, if this is set all clients must have the same value', default=1)
 @click.option('--lockname', '-l', help='Name of lock, if no name is given, a lock name is automatically generated', default='lockex')
+@click.option('--lockretry', '-r', help='How many times to try the command before failing', default=1)
 @click.option('--locktimeout', '-t', help='Timeout for waiting for lock aquistion, the default is to wait forever', default=None, type=click.FLOAT)
+@click.option('--retry', '-R', help='How many times to try the connecting to zookeeper before failing', default=1)
 @click.option('--timeout', '-T', help='Timeout for connecting to zk', default=30)
 @click.option('--zkhosts', '-z', envvar='ZKHOSTS', help='List of comma seperated zookeeper hosts, in the form of hostname:port', default='localhost:2181')
 @click.argument('command', nargs=-1, metavar='<command>')
-def execute(blocking, command, concurrent, lockname, locktimeout, timeout, zkhosts,):
+def execute(blocking, command, concurrent, lockname, lockretry, locktimeout, retry, timeout, zkhosts,):
     '''
     Main execution logic of getting a lock and executing the user supplied command
     '''
@@ -44,7 +46,9 @@ def execute(blocking, command, concurrent, lockname, locktimeout, timeout, zkhos
     resource = "{0}:{1}".format(socket.gethostname(), os.getpid())
     lockname = "/{0}/{1}".format(lockname, command_hash)
 
-    conn = get_zk(zkhosts, timeout)
+    command_retry_d = dict(max_tries=lockretry)
+    connection_retry_d = dict(max_tries=retry)
+    conn = get_zk(zkhosts, timeout, command_retry=command_retry_d, connection_retry=connection_retry_d)
     log.info("Locking with zkhosts={zkhosts} lockname={lockname} resource={resource} concurrent={concurrent} blocking={blocking} command='{command}'"
              .format(zkhosts=zkhosts, lockname=lockname, resource=resource, concurrent=concurrent, blocking=blocking, command=command))
 
@@ -139,11 +143,11 @@ def kill(pid):
             pass
 
 
-def get_zk(zkhosts, timeout):
+def get_zk(zkhosts, timeout, command_retry=None, connection_retry=None):
     '''
     Initiate a zookeeper connection and add a listener
     '''
-    conn = KazooClient(hosts=zkhosts, timeout=timeout)
+    conn = KazooClient(hosts=zkhosts, timeout=timeout, command_retry=command_retry, connection_retry=connection_retry)
     conn.add_listener(listener)
     try:
         conn.start()
