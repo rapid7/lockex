@@ -18,6 +18,11 @@ lockex will die if the connection to zookeeper is lost, it will continue
 to run if the connection is suspended. lockex will do it's best to
 cleanup the child process when this happens.
 
+License
+-------
+
+Please see COPYING
+
 Use cases:
 ----------
 
@@ -76,3 +81,8 @@ Requirements:
 * A working installation of zookeeper and python2.7 or higher.
 * A durable instance of zookeeper (at least three nodes).
 * The hosts are all synchronised with ntp.
+
+Vendored packages:
+------------------
+
+* lockex/glog.py - https://github.com/benley/python-glog - Copyright (c) 2015 Benjamin Staffin - under 2 clause BSD license.

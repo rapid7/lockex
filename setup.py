@@ -7,4 +7,5 @@ setup(name="lockex",
       setup_requires=['flake8==2.5.4'],
       tests_require=['tox==2.3.1', 'pytest==2.6.3', 'testfixtures==4.9.1', 'mock==1.0.1'],
       entry_points={'console_scripts': ['lockex = lockex.execute:execute']},
-      extras_require=dict(test=['testfixtures'],))
+      extras_require=dict(test=['testfixtures'],),
+      license='BSD',)
