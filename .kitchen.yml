@@ -1,0 +1,16 @@
+---
+driver:
+    name: vagrant
+    synced_folders:
+        - [".", "/home/vagrant/build"]
+
+provisioner:
+    name: shell
+
+platforms:
+    - name: debian-7.8
+
+suites:
+    - name: default
+      run_list:
+      attributes:
