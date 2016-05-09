@@ -1,3 +1,9 @@
+lockex (0.2-1) unstable; urgency=low
+
+  * Bug fix, really kill child processes correctly
+
+ -- Jimmy Tang <jimmy_tang@rapid7.com>  Mon, 09 May 2016 14:40:12 +0000
+
 lockex (0.1-1) unstable; urgency=low
 
   * Initial public release
