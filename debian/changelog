@@ -1,3 +1,9 @@
+lockex (0.3-1) unstable; urgency=low
+
+  * Added option for allowing user to specify lock id and path
+
+ -- Jimmy Tang <jimmy_tang@rapid7.com>  Mon, 09 May 2016 15:54:23 +0000
+
 lockex (0.2-1) unstable; urgency=low
 
   * Bug fix, really kill child processes correctly

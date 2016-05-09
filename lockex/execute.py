@@ -26,14 +26,15 @@ click.disable_unicode_literals_warning = True
 @click.command()
 @click.option('--blocking/--no-blocking', help='Block and wait if lock is acquired by another process', default=True)
 @click.option('--concurrent', '-c', help='Number of concurrent locks (leases) available, if this is set all clients must have the same value', default=1)
-@click.option('--lockname', '-l', help='Name of lock, if no name is given, a lock name is automatically generated', default='lockex')
+@click.option('--lockid', '-i', help='A string to identify the lock, if none is given an id is generated automatically', default=None)
+@click.option('--lockpath', '-p', help='Name of lock path, if no path is given, a lockex is used as a default', default='lockex')
 @click.option('--lockretry', '-r', help='How many times to try the command before failing', default=1)
 @click.option('--locktimeout', '-t', help='Timeout for waiting for lock aquistion, the default is to wait forever', default=None, type=click.FLOAT)
 @click.option('--retry', '-R', help='How many times to try the connecting to zookeeper before failing', default=1)
 @click.option('--timeout', '-T', help='Timeout for connecting to zk', default=30)
 @click.option('--zkhosts', '-z', envvar='ZKHOSTS', help='List of comma seperated zookeeper hosts, in the form of hostname:port', default='localhost:2181')
 @click.argument('command', nargs=-1, metavar='<command>')
-def execute(blocking, command, concurrent, lockname, lockretry, locktimeout, retry, timeout, zkhosts,):
+def execute(blocking, command, concurrent, lockid, lockpath, lockretry, locktimeout, retry, timeout, zkhosts,):
     '''
     Main execution logic of getting a lock and executing the user supplied command
     '''
@@ -42,9 +43,13 @@ def execute(blocking, command, concurrent, lockname, lockretry, locktimeout, ret
     else:
         sys.exit(1)
 
-    command_hash = str(abs(hash(command)))
+    if lockid is None:
+        command_hash = str(abs(hash(command)))
+    else:
+        command_hash = lockid
+
     resource = "{0}:{1}".format(socket.gethostname(), os.getpid())
-    lockname = "/{0}/{1}".format(lockname, command_hash)
+    lockname = "/{0}/{1}".format(lockpath, command_hash)
 
     command_retry_d = dict(max_tries=lockretry)
     connection_retry_d = dict(max_tries=retry)

@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 setup(name="lockex",
-      version="0.2",
+      version="0.3",
       description="Get lock from zookeeper and execute",
       packages=find_packages(exclude=["__pycache__"]),
       install_requires=['click==6.2', 'python_gflags==2.0', 'kazoo==2.2.1', 'psutil==4.1.0', 'future==0.15.2'],
