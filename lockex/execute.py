@@ -125,7 +125,7 @@ def kill(pid):
     '''
     process = psutil.Process(pid)
     try:
-        for proc in process.get_children(recursive=True) + [process]:
+        for proc in process.children(recursive=True) + [process]:
             try:
                 log.info("Killing pid={0}".format(proc.pid))
                 proc.kill()
