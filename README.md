@@ -54,8 +54,8 @@ to connect to your zookeeper cluster, the format is a comma seperated
 list of 'hostname:port'.
 
 
-Example:
---------
+Example - Cold standby processes:
+---------------------------------
 
 Assuming redis did not have a master/slave capability and you are using
 supervisord to run your processes.
@@ -74,6 +74,26 @@ If and when host1's instance redis dies, host2 will acquire the lock
 from zookeeper and startup redis. In a controlled example send host1's
 lockex instance with a SIGTERM and it will kill it's child processes.
 
+Example - Cron jobs:
+--------------------
+
+Assuming your clocks across all you hosts are in sync (via NTP) and you
+wish to run a cronjob only once across your hosts and you wish to build
+in some reliability of the job running.
+
+On all your hosts you can execute a job like this
+
+    lockex -t 1 -- sleep 30 && uptime
+
+What the above recipe will do is, every host will race to acquire a lock,
+the first host that aquires the lock will wait for 30 seconds before
+executing the subsequent 'uptime' command. All the other hosts will try
+to acquire the lock but timeout after 1 second.
+
+The uptime command could be a garabage collection process, nightly system
+wide checks or anything that is required.
+
+Note: care should be taken to select a sensible sleep and timeout value.
 
 Requirements:
 -------------
